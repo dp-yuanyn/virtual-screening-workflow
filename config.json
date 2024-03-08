@@ -1,0 +1,147 @@
+{
+    "receptor_file": "",
+    "ligands_dir": "",
+    "parallel_batch_size": 54000,
+    "scass_type_dict": {
+        "gpu_unidock": "c12_m64_1 * NVIDIA L4",
+        "gpu": "c12_m64_1 * NVIDIA L4",
+        "cpu": "c16_m32_cpu"
+    },
+    "ref_ligand_path": "",
+    "steps": [
+        {
+            "name": "score",
+            "params": {
+                "unidock_params": {
+                    "center_x": -15.56,
+                    "center_y": -17.38,
+                    "center_z": -25.99,
+                    "size_x": 15.85,
+                    "size_y": 23.77,
+                    "size_z": 17.42,
+                    "exhaustiveness": 1024,
+                    "max_step": 15, 
+                    "max_evals": 3,
+                    "scoring": "vinardo",
+                    "num_modes": 5
+                },
+                "rescore":"",
+                "constained_params": {
+                    "do_constrain": false,
+                    "constrained_type": "",
+                    "h_bond_sites": "A:319:O,A:282:O",
+                    "indices_list": []
+                },
+                "filter_config":{
+                    "filter_methods": ["strain_energy"]
+                },
+                "top_config": {
+                    "sort_key": "origin_score",
+                    "reverse": false,
+                    "top_num": 50
+                }
+            }
+        },
+        {
+            "name": "postprocess",
+            "params": {"methods":["pose_refine", "ifp"]}
+        },
+        {
+            "name": "rescore",
+            "params": {
+                "rescore_config":{
+                    "rescore_method":["vina", "gnina", "rtmscore", "karmadock"],
+                    "rtmscore_params": {
+                        "sdf_batch": 1800,
+                        "batch_size": 384
+                    },
+                    "rescore_unidock_params": {
+                        "center_x": -15.56,
+                        "center_y": -17.38,
+                        "center_z": -25.99,
+                        "size_x": 15.85,
+                        "size_y": 23.77,
+                        "size_z": 17.42
+                    }
+                },
+                "top_config": {
+                    "sort_key":"gnina_affinity",
+                    "reverse": true,
+                    "top_ratio":0.5
+                }
+            }
+        },
+        {
+            "name": "pbgbsa",
+            "params": {
+                "pbgbsa_params": {
+                    "simulation": {
+                        "mode": "em",
+                        "boxtype": "triclinic",
+                        "boxsize": 0.9,
+                        "conc": 0.15,
+                        "nsteps": 500000,
+                        "nframe": 100,
+                        "eqsteps": 50000,
+                        "proteinforcefield": "amber03",
+                        "ligandforcefield": "gaff2",
+                        "maxsol": 0,
+                        "ligandcharge": "bcc"
+                    },
+                    "PBSA": {
+                        "sys_name": "GBSA",
+                        "modes": "gb",
+                        "igb": "2",
+                        "indi": 4,
+                        "exdi": 80,
+                        "nonpolarsurfConst": 0,
+                        "surften": 0.0072
+                    }
+                }
+            }
+        }
+    ],
+    "image_dict": {
+        "ligprep_image": "docker.io/xmyyn/virtual_screening_sidecar:chemtools_v0.0.1",
+        "unidock_tools_image": "docker.io/dptechnology/unidock_tools:latest",
+        "mgltools_image": "docker.io/xmyyn/virtual_screening_sidecar:chemtools_v0.0.1",
+        "gnina_image":"docker.io/xmyyn/virtual_screening_sidecar:gnina_0.0.1",
+        "pymol_image":"docker.io/xmyyn/virtual_screening_sidecar:pymol_v0.0.1",
+        "rtmscore_image":"docker.io/xmyyn/virtual_screening_sidecar:rtm_v0.0.4",
+        "karma_dock_image": "docker.io/xmyyn/virtual_screening_sidecar:KarmaDock_v11",
+        "minimize_image": "docker.io/xmyyn/virtual_screening_sidecar:ifp_minimize_v0.0.1",
+        "pbgbsa_image": "docker.io/dockerymh/unigbsa:latest"
+    },
+    "dflow_config":{
+        "host": "https://lbg-workflow-dflow.dp.tech",
+        "k8s_api_server": "https://lbg-workflow-dflow.dp.tech",
+        "namespace": "dflow"
+    },
+    "dflow_s3_config":{
+        "repo_key": "oss-bohrium"
+    },
+    "bohrium_config": {
+        "bohrium_url": "https://bohrium.dp.tech",
+        "tiefblue_url": "https://tiefblue.dp.tech",
+        "username": "",
+        "password": "",
+        "project_id": 0
+    },
+    "dispatcher_config": {
+        "image": "registry.dp.tech/public/dptechnology/dpdispatcher:latest",
+        "clean": true,
+        "machine_dict": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
+                "input_data": {
+                    "job_type": "container",
+                    "platform": "ali",
+                    "on_demand": 0
+                }
+            }
+        }
+    }
+}
+
+    
